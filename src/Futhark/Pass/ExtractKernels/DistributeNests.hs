@@ -580,7 +580,7 @@ maybeDistributeStm bnd@(Let _ aux (BasicOp (Reshape reshape _))) acc =
     return $ oneStm $ Let outerpat aux $ BasicOp $ Reshape reshape' arr
 maybeDistributeStm stm@(Let _ aux (BasicOp (Rotate rots _))) acc =
   distributeSingleUnaryStm acc stm $ \nest outerpat arr -> do
-    let rots' = map (const $ intConst Int32 0) (kernelNestWidths nest) ++ rots
+    let rots' = map (const $ intConst Int64 0) (kernelNestWidths nest) ++ rots
     return $ oneStm $ Let outerpat aux $ BasicOp $ Rotate rots' arr
 maybeDistributeStm stm@(Let pat aux (BasicOp (Update arr slice (Var v)))) acc
   | not $ null $ sliceDims slice =
@@ -614,10 +614,10 @@ maybeDistributeStm (Let pat aux (BasicOp (Update arr [DimFix i] v))) acc
         lam =
           Lambda
             { lambdaParams = [],
-              lambdaReturnType = [Prim int32, et],
+              lambdaReturnType = [Prim int64, et],
               lambdaBody = mkBody mempty [i, v]
             }
-    maybeDistributeStm (Let pat aux $ Op $ Scatter (intConst Int32 1) lam [] [(w, 1, arr)]) acc
+    maybeDistributeStm (Let pat aux $ Op $ Scatter (intConst Int64 1) lam [] [(w, 1, arr)]) acc
   where
     amortises DoLoop {} = True
     amortises Op {} = True
@@ -991,7 +991,7 @@ determineReduceOp lam nes =
           BasicOp $
             Index ne_v $
               fullSlice ne_v_t $
-                replicate (shapeRank shape) $ DimFix $ intConst Int32 0
+                replicate (shapeRank shape) $ DimFix $ intConst Int64 0
       return (lam', nes', shape)
     Nothing ->
       return (lam, nes, mempty)
